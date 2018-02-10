@@ -6,7 +6,7 @@
 		<div class="col">
 			<ul>
 				{% for category in categories %}
-				 <a href="{{url_for('showAllCategories', category_name = category.name)}}">
+				 <a href="{{url_for('showCategory', catalog_name = category.name)}}">
 				 	<li>
 				 		<span>{{category.name}}</span>
 				 	</li>
@@ -16,9 +16,9 @@
 			
 		</div>
 		<div class="col-6">
-			<ul class="list__items">
+			<ul class="list_items">
 					{% for categoryPlace in categoryPlaces %}
-						<a href="{{url_for('showCategory', catalog_name = categoryPlace.category_name ,place_name = categoryPlace.name )}}">
+						<a href="{{url_for('showPlace', catalog_name = categoryPlace.category.name ,place_name = categoryPlace.name )}}">
 							<li class="items__item">
 								<span class="item__name">{{categoryPlace.name}}</span>
 								<span class="item__type">({{categoryPlace.category.name}})</span>
