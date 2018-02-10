@@ -14,6 +14,11 @@
 
     <!-- Custom styles for this template -->
     <link href="../../static/css/starter-template.css" rel="stylesheet">
+     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js">
+  </script>
+
+<script src="//apis.google.com/js/platform.js?onload=start"> </script>
+
   </head>
 
   <body>
@@ -23,7 +28,16 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <a class="navbar-brand" href="/">CATALOG APP</a>
-      <a href=""><button type="button" class="btn btn-primary">LOGIN</button></a>
+          {%if 'username' not in session %}
+          <a href="{{url_for('showLogin')}}" >
+            <button type="button" class="btn btn-primary">LOGIN</button>
+          </a>
+          {% else %}
+          <a href="{{url_for('logout')}}">
+            <button type="button" class="btn btn-primary">LOGIN</button>
+          </a>
+          {% endif %}
+      
 
       <div class="collapse navbar-collapse" id="navbarsExampleDefault">
         
@@ -48,5 +62,40 @@
     <script src="../static/js/bootstrap.min.js"></script>
     <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
     <script src="../static/js/ie10-viewport-bug-workaround.js"></script>
+
+     <!--Google Login-->
+    <script>
+    function signInCallback(authResult) {
+      if (authResult['code']) {
+        //Hide the sign-in button once the user is authorized
+        $('#login').attr('style','display:none');
+        // Send one-time-use code to the server, if server responds,
+        // write a 'login successful' message to the web page and then
+        // redirect back to the main restaurants page
+        $.ajax({
+          type: 'POST',
+          url: '/gconnect?state={{STATE}}',
+          processData: false,
+          data: authResult['code'],
+          contentType: 'application/octet-stream; charset=utf-8',
+          success: function(result) {
+            // Handle or verify the server response if necessary.
+            if (result) {
+              $('#result').html('Login Successful!</br>'+ result + '</br>Redirecting...');
+              setTimeout(function() {
+                window.location.href = "/catalog";
+              }, 4000);
+            } else if (authResult['error']) {
+              console.log('There was an error: ' + authResult['error']);
+            } else {
+              $('#result').html('Failed to make a server-side call. Check your configuration and console.');
+            }
+          },
+          error: function(result) {
+            console.log('There was an error: ' + result);
+          }
+      }); } }
+    </script>
+    <!--/Google Login-->
   </body>
 </html>
