@@ -17,11 +17,11 @@
 		</div>
 		<div class="col-6">
 		<h1>{{categoryName}}</h1>
-			{% for categoryPlace in categoryPlaces %}
+			{% for place in places %}
 
-			<a href="{{url_for('showPlace', catalog_name = categoryPlace.category.name ,place_name = categoryPlace.name)}}">
+			<a href="{{url_for('showPlace', catalog_name = place.category.name ,place_name = place.name)}}">
 			<li>
-				<span>{{categoryPlace.name}}</span>
+				<span>{{place.name}}</span>
 			</li>
 			</a>
 			{% endfor %}
