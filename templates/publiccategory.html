@@ -5,18 +5,14 @@
 {% block content %}
 
 <!-- Page Content -->
-<section id="showItem" class="section">
 
-    <div class="container">
-
-        <div class="row">
 
             {% include "categories.html" %}
 
             <div class="col-md-9">
                 <h6 class="padding-bottom-26">Places (<strong>{{count}}</strong>)</h6>
                 {% for p in places %}
-                <div class="thumbnail text-center">
+               
                     <div class="caption-full">
                         <img class="img-responsive img-center" src="{{ p.picture }}" alt="{{ p.name }}">
                     </div>
@@ -27,11 +23,6 @@
                 {% endfor %}
             </div>
 
-        </div>
-        <!-- /.row -->
-    </div>
-    <!-- /.container -->
-</section>
 <!-- /.section -->
 
 {% endblock %}
