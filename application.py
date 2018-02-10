@@ -192,7 +192,7 @@ def showCategory(catalog_name):
 								categories=categories,
 								categoryName=categoryName,
 								count=count,
-								categoryPlaces =categoryPlaces)
+								categoryPlaces=categoryPlaces)
 	else:
 		return render_template('category.html',
 								categories=categories, 
@@ -205,13 +205,14 @@ def showCategory(catalog_name):
 @app.route('/catalog/<path:catalog_name>/<path:place_name>')
 def showPlace(catalog_name, place_name):
 	# Get category item
-	place = session.query(ItemPlace).filter_by(name = place_name).first()
+	place = session.query(ItemPlace).filter_by(name = place_name).one()
+	category = session.query(Category).filter_by(name=catalog_name).one()
 	categories = session.query(Category).all()
 	creator = getUserInfo(place.user_id)
 	if 'username' not in login_session or creator.id != login_session['user_id']:
 		return render_template('publicplace.html', 
 							   place = place,
-							   category = catalog_name,
+							   category = category,
 							   categories=categories,
 							   creator=creator)
 	else:
