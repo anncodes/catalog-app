@@ -226,4 +226,5 @@ def showPlace(catalog_name, place_name):
 
 if __name__ == '__main__':
 	app.debug = True
-	app.run(host = '0.0.0.0', port = 5030)
+	app.secret_key = "altered_secret_key"
+	app.run(host = '0.0.0.0', port = 5050)
