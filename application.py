@@ -25,6 +25,14 @@ Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
+def login_required(f):
+	@wraps(f)
+	def x(*args, **kwargs):
+		if 'username' not in login_session:
+			return redirect('/login')
+		return f(*args, **kwargs)
+	return x
+
 #Create anti-forgery state token
 @app.route('/login')
 def showLogin():
@@ -192,7 +200,7 @@ def showCategory(catalog_name):
 								categories=categories,
 								categoryName=categoryName,
 								count=count,
-								categoryPlaces=categoryPlaces)
+								categoryPlaces =categoryPlaces)
 	else:
 		return render_template('category.html',
 								categories=categories, 
@@ -205,14 +213,13 @@ def showCategory(catalog_name):
 @app.route('/catalog/<path:catalog_name>/<path:place_name>')
 def showPlace(catalog_name, place_name):
 	# Get category item
-	place = session.query(ItemPlace).filter_by(name = place_name).one()
-	category = session.query(Category).filter_by(name=catalog_name).one()
+	place = session.query(ItemPlace).filter_by(name = place_name).first()
 	categories = session.query(Category).all()
 	creator = getUserInfo(place.user_id)
 	if 'username' not in login_session or creator.id != login_session['user_id']:
 		return render_template('publicplace.html', 
 							   place = place,
-							   category = category,
+							   category = catalog_name,
 							   categories=categories,
 							   creator=creator)
 	else:
@@ -222,9 +229,158 @@ def showPlace(catalog_name, place_name):
 							   categories=categories,
 							   creator=creator)
 
-#
+# Add new category
+@app.route('catalog/newcategory', methods=['GET','POST'])
+
+def newCategory():
+	if 'username' not in login_session:
+		return redirect('/login')
+	if request.method == 'POST':
+		newCategory = Category( 
+			name=request.form['name'],
+			user_id=login_session['user_id'])
+		sesion.add(newCategory)
+		flash('New Category %s Successfully created' % newCategory.name)
+		session.commit()
+		return redirect(url_for('showCategory'))
+	else:
+		return render_template('newCategory.html')
+
+#Edit a category
+@app.route('/catalog/<path:catalog_name>/edit', methods=['GET', 'POST'])
+def editCategory(catalog_name):
+	
+	# Get category to edit
+	editedCategory = session.query(Category).filter_by(name=catalog_name).one()
+
+	# Check if user is logged in
+	if 'username' not in login_session:
+	    return redirect('/login')
+
+	# Get all categories
+	categories = session.query(Category).all()
+
+	# Get creator of category
+	creator =getUserInfo(editCategory.user_id)
+
+	# Check if user logged is the creator
+	if creator.id != login_session['user_id']:
+		flash ("You do not have a permission to edit this Category.	This belongs to %s" 
+			% creator.name)
+		return redirect('/login')
+
+	# POST method
+	if request.method == 'POST':
+		if request.form['name']:
+			editCategory.name = request.form['name']
+		session.add(editCategory)
+		session.commit()
+		flash('Category successfully edited.')
+		return redirect(url_for('showCategory'))
+	else:
+		return render_template('editcategory.html',
+								catalog=editedCategories,
+								categories = categories)
+
+#Delete a category
+@app.route('/catalog/<path:catalog_name>/delete', methods=['GET','POST'])
+
+def deleteCategory(catalog_name):
+	deleteCategory = session.query(Category).filter_by(name=catalog_name).one()
+	creator = getUserInfo(deleteCategory.user_id)
+	user = getUserInfo(login_session['user_id'])
+
+	#if logged in user is the catalog owner
+	if creator.id != login_session['user_id']:
+		flash('No permission to deleted this category. This belongs to %s' % creator.name)
+		return redirect(url_for('showCategory'))
+	if request.method == 'POST':
+		session.delete(deleteCategory)
+		session.commit()
+		flash('Category successfully deleted.')
+		return redirect(url_for(showCategory))
+	else:
+		return render_template('deletecategory.html', category=categoryDelete)
+
+#Add an item
+@app.route('catalog/add', methods=['GET', 'POST'])
+def addItemPlace():
+	 if 'username' not in login_session:
+        return redirect('/login')
+
+	categories = session.query(Category).all()
+	if request.method == 'POST':
+		newItemPlace = ItemPlace(
+			name=request.form['name'],
+			address=request.form['address'],
+			description=request.form['description'],
+			photo=request.form['photo'],
+			category=request.session[Category].filter_by(name=request.form['category']).one(),
+			user_id=login_session['user_id'])
+		session.add(newItemPlace)
+		session.commit()
+		flash('Place successfully added.')
+		return redirect(url_for(showCategory))
+	else:
+		return render_template('newitemplace.html', categories=categories)
+
+# Edit an item place in a category
+@app.route('catalog/<path:catalog_name>/<path:place_name>/edit', methods=['GET', 'POST'])
+def editPlace(catalog_name, place_name):
+	 if 'username' not in login_session:
+        return redirect('/login')
+    
+     # Get category to edit
+	editedPlace = session.query(ItemPlace).filter_by(name=place_name).one()
+
+	# Get all categories
+	categories = session.query(Category).all()
+
+	# Get creator of category
+	creator =getUserInfo(editCategory.user_id)
+
+	# Check if user logged is the creator
+	if creator.id != login_session['user_id']:
+		flash ("You do not have a permission to edit this Category.	This belongs to %s" 
+			% creator.name)
+		return redirect('/login')
+
+	# POST method
+	if request.method == 'POST':
+		if request.form['name']:
+			editedPlace.name = request.form['name']
+		if request.form['description']:
+            editedPlace.description = request.form['description']
+        if request.form['price']:
+            editedPlace.photo = request.form['photo']
+        if request.form['category']:
+            editedPlace.category = request.form['category']
+		session.add(editedPlace)
+		session.commit()
+		flash('Item successfully edited.')
+		return redirect(url_for('showCategory'))
+	else:
+		return render_template('edititemplace.html',
+								editedItem=editedItem,
+								categories = categories)
+
+# Delete item place
+@app.route('/catalog/<path:catalog_name>/<path:place_name>/delete', methods=['GET','POST'])
+def deleteItemPlace(catalog_name, place_name):
+	 if 'username' not in login_session:
+        return redirect('/login')
+     category = session.query(Category).filter_by(name=catalog_name).one()
+     placetoDelete = session.query(ItemPlace).filter_by(name=place_name).one()
+
+     # Check if user logged is the creator
+	if creator.id != login_session['user_id']:
+		flash ("You do not have a permission to edit this Category.	This belongs to %s" 
+			% creator.name)
+		return redirect('/login')
+		if request.method == 'POST'
+
 
 if __name__ == '__main__':
 	app.debug = True
 	app.secret_key = "altered_secret_key"
-	app.run(host = '0.0.0.0', port = 5050)
+	app.run(host = '0.0.0.0', port = 5020)
