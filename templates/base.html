@@ -22,8 +22,7 @@
   </head>
 
   <body>
-
-    <nav class="navbar navbar-toggleable-md navbar-inverse bg-inverse fixed-top">
+ <nav class="navbar navbar-toggleable-md navbar-inverse bg-inverse fixed-top">
       <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -33,17 +32,23 @@
             <button type="button" class="btn btn-primary">LOGIN</button>
           </a>
           {% else %}
-          <a href="{{url_for('logout')}}">
-            <button type="button" class="btn btn-primary">LOGIN</button>
+          <a href="{{url_for('gdisconnect')}}">
+            <button type="button" class="btn btn-primary">LOGOUT</button>
           </a>
           {% endif %}
       
 
       <div class="collapse navbar-collapse" id="navbarsExampleDefault">
-        
+          {% if 'username' not in session %}
+           {% else %}
+            <ul class="nav navbar-nav navbar-right">
+             <li><a href="{{url_for('addPlace')}}">Add Item</a></li>
+             <li><a href="{{url_for('addCategory')}}">Add Category</a></li>
+             </ul>
+           {% endif %}
         
       </div>
-    </nav>
+    </nav> 
 
     <div class="container">
 
