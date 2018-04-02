@@ -22,7 +22,7 @@ session.add(User1)
 session.commit()
 
 User2 = User(
-    name="Nao Wonders",
+    name="Ann Gepulle",
     email="nwonders13@gmail.com",
     picture="https://placeimg.com/200/200/animals")
 session.add(User2)

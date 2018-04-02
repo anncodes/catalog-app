@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+	<div class="row">
+		<div class="col">
+			
+			{{place.name}}
+			{{place.description}}
+			<a href = "{{url_for('deleteItem', catalog_name = item.category.name, place_name = place.name)}}">Delete</a>
+			<a href = "{{url_for('editItem', catalog_name = place.category.name, place_name = place.name)}}">Edit</a>
+		</div>
+		<div class="col-6">
+
+	    </div>
+
+	</div>
+	 <
+{% endblock %}

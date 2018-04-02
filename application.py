@@ -42,6 +42,7 @@ def showLogin():
     login_session['state'] = state
     return render_template('login.html', STATE=state)
 
+# GConnect
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
     #Validate state token
@@ -50,8 +51,7 @@ def gconnect():
         response.headers['Content-Type'] = 'application/json'
         return response
     # Obtain authorization code
-    code = request.data()
-    code = request.data.decode('utf-8')
+        code = request.data
 
     try:
         #Upgrade the authorization code into credentials object
@@ -69,7 +69,10 @@ def gconnect():
     url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s'
            % access_token)
     h = httplib2.Http()
-    result = json.loads(h.request(url, 'GET')[1])
+    response = h.request(url, 'GET')[1]
+    str_response = response.decode('utf-8')
+    result = json.loads(str_response)
+
     # If there was an error in the access token info, abort.
     if result.get('error') is not None:
         response = make_response(json.dumps(result.get('error')), 500)
@@ -101,12 +104,12 @@ def gconnect():
         return response
 
     # Store the access token in the session for later use.
-    login_session['access_token'] = credentials.access_token
+    login_session['access_token'] = access_token
     login_session['gplus_id'] = gplus_id
 
     # Get user info
     userinfo_url = "https://www.googleapis.com/oauth2/v1/userinfo"
-    params = {'access_token': credentials.access_token, 'alt': 'json'}
+    params = {'access_token': access_token, 'alt': 'json'}
     answer = requests.get(userinfo_url, params=params)
 
     data = answer.json()
@@ -168,14 +171,22 @@ def gdisconnect():
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
     if result['status'] == '200':
-        response = make_response(json.dumps('Successfully disconnected.'), 200)
-        response.headers['Content-Type'] = 'application/json'
+        # Reset the user's sesson.
+        del login_session['access_token']
+        del login_session['gplus_id']
+        del login_session['username']
+        del login_session['email']
+        del login_session['picture']
+
+        response = redirect("/catalog/")
+        flash("You are now logged out.")
         return response
     else:
-        response = make_response(json.dumps('Failed to revoke token for given user.', 400))
+        # For whatever reason, the given token was invalid.
+        response = make_response(
+            json.dumps('Failed to revoke token for given user.', 400))
         response.headers['Content-Type'] = 'application/json'
         return response
-
 #Flask routes
 #Show 
 @app.route('/')
@@ -203,6 +214,7 @@ def showCategory(catalog_name):
                                 count=count,
                                 categoryPlaces =categoryPlaces)
     else:
+        user = getUserInfo(login_session['user_id'])
         return render_template('category.html',
                                 categories=categories, 
                                 categoryName=categoryName, 
@@ -360,27 +372,29 @@ def editPlace(catalog_name, place_name):
                                 editedItem=editedItem,
                                 categories = categories)
 
-# Delete item place
-# @app.route('/catalog/<path:catalog_name>/<path:place_name>/delete', methods=['GET','POST'])
-# @login_session
-# def deleteItemPlace(catalog_name, place_name):
+#Delete item place
+@app.route('/catalog/<path:catalog_name>/<path:place_name>/delete', methods=['GET','POST'])
+@login_required
+def deleteItemPlace(catalog_name, place_name):
 
-#      category = session.query(Category).filter_by(name=catalog_name).one()
-#      placetoDelete = session.query(ItemPlace).filter_by(name=place_name).one()
-#      categories = session.query(Category).all()
+     category = session.query(Category).filter_by(name=catalog_name).one()
+     placetoDelete = session.query(ItemPlace).filter_by(name=place_name).one()
+     categories = session.query(Category).all()
      
-#      # Check if user logged is the creator
-#      if creator.id != login_session['user_id']:
-#         flash ("You do not have a permission to delete this item. This belongs to %s" 
-#             % creator.name)
-#         return redirect('/login')
-#      if request.method == 'POST':
-#         session.delete(placetoDelete)
-#         session.commit()
-#         flash('Item successfully deleted!')
-#         return redirect(url_for('showCategory', catalog_name=cataeory.name))
-#      else:
-#         return render_template('deleteplace.html', place_name=placetoDelete)
+     # Check if user logged is the creator
+     if creator.id != login_session['user_id']:
+        flash ("You do not have a permission to delete this item. This belongs to %s" 
+            % creator.name)
+        return redirect('/login')
+     if request.method == 'POST':
+        session.delete(placetoDelete)
+        session.commit()
+        flash('Item successfully deleted!')
+        return redirect(url_for('showCategory', catalog_name=cataeory.name))
+     else:
+        return render_template('deleteplace.html', place_name=placetoDelete)
+
+# JSON APIs 
 
 
 
