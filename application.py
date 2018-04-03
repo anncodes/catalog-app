@@ -45,29 +45,31 @@ def showLogin():
 # GConnect
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
-    #Validate state token
+    # Validate state token
     if request.args.get('state') != login_session['state']:
         response = make_response(json.dumps('Invalid state parameter.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
-    # Obtain authorization code
-        code = request.data
+    # Obtain authorization code, now compatible with Python3
+    request.get_data()
+    code = request.data.decode('utf-8')
 
     try:
-        #Upgrade the authorization code into credentials object
-        oauth_flow = flow_from_clientsecrets('clients_secrets.json', scope='')
+        # Upgrade the authorization code into a credentials object
+        oauth_flow = flow_from_clientsecrets('client_secrets.json', scope='')
         oauth_flow.redirect_uri = 'postmessage'
-        credentials = oauth_flow.step2_excahnge(code)
+        credentials = oauth_flow.step2_exchange(code)
     except FlowExchangeError:
         response = make_response(
             json.dumps('Failed to upgrade the authorization code.'), 401)
-        response.header['Content-Type'] = 'application/json'
+        response.headers['Content-Type'] = 'application/json'
         return response
 
- # Check that the access token is valid.
+    # Check that the access token is valid.
     access_token = credentials.access_token
     url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s'
            % access_token)
+    # Submit request, parse response - Python3 compatible
     h = httplib2.Http()
     response = h.request(url, 'GET')[1]
     str_response = response.decode('utf-8')
@@ -91,7 +93,6 @@ def gconnect():
     if result['issued_to'] != CLIENT_ID:
         response = make_response(
             json.dumps("Token's client ID does not match app's."), 401)
-        print ("Token's client ID does not match app's.")
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -118,7 +119,7 @@ def gconnect():
     login_session['picture'] = data['picture']
     login_session['email'] = data['email']
 
-    # Check if user exists
+    # see if user exists, if it doesn't make a new one
     user_id = getUserID(login_session['email'])
     if not user_id:
         user_id = createUser(login_session)
@@ -135,6 +136,7 @@ def gconnect():
     return output
 
 # User Helper Functions
+
 
 def createUser(login_session):
     newUser = User(name=login_session['username'], email=login_session[
@@ -158,9 +160,11 @@ def getUserID(email):
         return None
 
 # DISCONNECT - Revoke a current user's token and reset their login_session
+
+
 @app.route('/gdisconnect')
 def gdisconnect():
-    # Only disconnect a connected user.
+        # Only disconnect a connected user.
     access_token = login_session.get('access_token')
     if access_token is None:
         response = make_response(
@@ -178,7 +182,9 @@ def gdisconnect():
         del login_session['email']
         del login_session['picture']
 
-        response = redirect("/catalog/")
+        # response = make_response(json.dumps('Successfully disconnected.'), 200)
+        # response.headers['Content-Type'] = 'application/json'
+        response = redirect(url_for('showCatalog'))
         flash("You are now logged out.")
         return response
     else:
