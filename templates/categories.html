@@ -1,9 +1,10 @@
 {% extends "base.html" %}
 
 {% block content %}
-
+    
 	<div class="row">
-		<div class="col">
+		<div class="col-md-6">
+			<h1>Categories</h1>
 			<ul>
 				{% for category in categories %}
 				 <a href="{{url_for('showCategory', catalog_name = category.name)}}">
@@ -13,21 +14,9 @@
 				 </a>
 				 {% endfor %}
 			</ul>
+
 			
 		</div>
-		<div class="col-6">
-			<ul class="list_items">
-					{% for categoryPlace in categoryPlaces %}
-						<a href="{{url_for('showPlace', catalog_name = categoryPlace.category.name ,place_name = categoryPlace.name )}}">
-							<li class="items__item">
-								<span class="item__name">{{categoryPlace.name}}</span>
-								<span class="item__type">({{categoryPlace.category.name}})</span>
-							</li>
-						</a>
-					{% endfor %}
-				</ul>
+	
 
-	    </div>
-
-	</div>
 {% endblock %}

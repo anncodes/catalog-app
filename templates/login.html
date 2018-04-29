@@ -47,7 +47,7 @@ function signInCallback(authResult) {
     // Send the one-time-use code to the server, if the server responds, write a 'login successful' message to the web page and then redirect back to the main restaurants page
     $.ajax({
       type: 'POST',
-      url: '/gconnect/?state={{STATE}}',
+      url: '/gconnect?state={{STATE}}',
       processData: false,
       data: authResult['code'],
       contentType: 'application/octet-stream; charset=utf-8',
@@ -56,7 +56,7 @@ function signInCallback(authResult) {
         if (result) {
           $('#result').html('Login Successful!</br>'+ result + '</br>Redirecting...')
          setTimeout(function() {
-          window.location.href = "/catalog/";
+          window.location.href = "/catalog";
          }, 4000);
           
       } else if (authResult['error']) {

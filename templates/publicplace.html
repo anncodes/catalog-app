@@ -2,15 +2,16 @@
 
 {% block content %}
 
+
 	<div class="row">
+		 {% include "categories.html" %}
+	 {% for place in places %}
 		<div class="col">
 			{{place.name}}
-			{{place.description}}
 			
+	{% endfor %}	
 		</div>
-		<div class="col-6">
-
-	    </div>
+		
 
 	</div>
 {% endblock %}
