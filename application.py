@@ -204,7 +204,7 @@ def showAllCategories():
     return render_template('catalog.html', categories = categories, categoryPlaces = categoryPlaces)
 
 #Show items in a category
-@app.route('/catalog/<path:catalog_name>')
+@app.route('/catalog/<path:catalog_name>/places')
 def showCategory(catalog_name):
     categories = session.query(Category).order_by(asc(Category.name))
     category = session.query(Category).filter_by(name=catalog_name).first()
@@ -301,13 +301,12 @@ def deleteCategory(catalog_name):
         flash('Category successfully deleted.')
         return redirect(url_for(showAllCategories))
     else:
-        return render_template('deletecategory.html', category=deletedCategory)
+        return render_template('deletecategory.html', catalog_name=catalog_name, category=deletedCategory)
 
 #Add an item
-@app.route('/catalog/add', methods=['GET', 'POST'])
+@app.route('/catalog/newplace', methods=['GET', 'POST'])
 @login_required
 def addItemPlace():
-     
     categories = session.query(Category).all()
     if request.method == 'POST':
         newItemPlace = ItemPlace(
@@ -315,12 +314,12 @@ def addItemPlace():
             address=request.form['address'],
             description=request.form['description'],
             photo=request.form['photo'],
-            category=request.session[Category].filter_by(name=request.form['category']).one(),
+            category=session.query(Category).filter_by(name=request.form['category']).first(),
             user_id=login_session['user_id'])
         session.add(newItemPlace)
         session.commit()
         flash('Place successfully added.')
-        return redirect(url_for(showAllCategories))
+        return redirect(url_for('showAllCategories'))
     else:
         return render_template('newitemplace.html', categories=categories)
 
@@ -352,7 +351,7 @@ def editPlace(place_name):
         return redirect(url_for('showCategory', catalog_name=editedPlace.category.name))
     else:
         return render_template('edititemplace.html',
-                                place=editedItem,
+                                place=editedPlace,
                                 categories = categories)
 
 #Delete item place
