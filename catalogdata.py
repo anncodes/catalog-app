@@ -13,6 +13,10 @@ Base.metadata.bind = engine
 DBsession = sessionmaker(bind=engine)
 session = DBsession()
 
+session.query(Category).delete()
+session.query(ItemPlace).delete()
+session.query(User).delete()
+
 # Add users
 User1 = User(
     name="Sophie Durand",
@@ -23,7 +27,7 @@ session.commit()
 
 User2 = User(
     name="Ann Gepulle",
-    email="nwonders13@gmail.com",
+    email="annm.gepulle@gmail.com",
     picture="https://placeimg.com/200/200/animals")
 session.add(User2)
 session.commit()
@@ -31,13 +35,13 @@ session.commit()
 # Create categories
 Category1 = Category(
     name="Cultural",
-    user_id=1)
+    user_id=2)
 session.add(Category1)
 session.commit()
 
 Category2 = Category(
     name="Food",
-    user_id=1)
+    user_id=2)
 session.add(Category2)
 session.commit()
 
@@ -55,7 +59,7 @@ ItemPlace1 = ItemPlace(
     in Shuri, Okinawa.",
     photo="http://bit.ly/2EhVDZK",
     category_id=1,
-    user_id=1)
+    user_id=2)
 session.add(ItemPlace1)
 session.commit()
 
@@ -79,7 +83,7 @@ ItemPlace3 = ItemPlace(
     Ryukyuan people for millennia.",
     photo="http://bit.ly/2D6WJs5",
     category_id=1,
-    user_id=1)
+    user_id=2)
 session.add(ItemPlace3)
 session.commit()
 
@@ -91,7 +95,7 @@ ItemPlace4 = ItemPlace(
     and schools of fish.",
     photo="http://bit.ly/2D53Jpf",
     category_id=2,
-    user_id=1)
+    user_id=2)
 session.add(ItemPlace4)
 session.commit()
 
