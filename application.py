@@ -145,18 +145,18 @@ def createUser(login_session):
                    'email'], picture=login_session['picture'])
     session.add(newUser)
     session.commit()
-    user = session.query(User).filter_by(email=login_session['email']).one()
+    user = session.query(User).filter_by(email=login_session['email']).first()
     return user.id
 
 
 def getUserInfo(user_id):
-    user = session.query(User).filter_by(id=user_id).one()
+    user = session.query(User).filter_by(id=user_id).first()
     return user
 
 
 def getUserID(email):
     try:
-        user = session.query(User).filter_by(email=email).one()
+        user = session.query(User).filter_by(email=email).first()
         return user.id
     except:
         return None
@@ -272,7 +272,7 @@ def editCategory(catalog_name):
     
     # Get category to edit
     editedCategory = session.query(Category).filter_by(name=catalog_name).one()
-    category = session.query(Category).filter_by(name=catalog_name).first()
+    category = session.query(Category).filter_by(name=catalog_name).one()
     
     user = getUserInfo(login_session['user_id'])
     # POST method
@@ -327,7 +327,7 @@ def addItemPlace():
 @login_required
 def editPlace(place_name):
     
-    editedPlace=session.query(ItemPlace).filter_by(name=place_name).first()
+    editedPlace=session.query(ItemPlace).filter_by(name=place_name).one()
     categories=session.query(Category).all()
     user=getUserInfo(login_session['user_id'])
     
@@ -336,18 +336,18 @@ def editPlace(place_name):
         if request.form['name']:
             editedPlace.name=request.form['name']
         if request.form['address']:
-            editedPlace.description=request.form['address']
+            editedPlace.address=request.form['address']
         if request.form['description']:
             editedPlace.description=request.form['description']
         if request.form['photo']:
             editedPlace.photo=request.form['photo']
         if request.form['category']:
-            category=session.query(Category).filter_by(name=request.form['category']).first()
-            editedPlace.category=request.form['category']
+            category=session.query(Category).filter_by(name=request.form['category']).one()
+            editedPlace.category=category
         session.add(editedPlace)
         session.commit()
         flash('Item successfully edited.')
-        return redirect(url_for('showCategory', place=editedPlace.category.name))
+        return redirect(url_for('showCategory', catalog_name=editedPlace.category.name))
     else:
         return render_template('edititemplace.html',
                                 place=editedPlace,

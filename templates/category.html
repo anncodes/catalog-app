@@ -7,7 +7,7 @@
 			<h1>Categories</h1>
 			<ul>
 				{% for category in categories %}
-				 <a href="{{url_for('showCategory', catalog_name = category.name)}}">
+				 <a href="{{url_for('showCategory', catalog_name=category.name)}}">
 				 	<li>
 				 		<span>{{category.name}}</span>
 				 	</li>
@@ -19,7 +19,7 @@
 		<h1>{{categoryName}}</h1>
 			{% for place in places %}
 
-			<a href="{{url_for('showPlace', catalog_name = place.category.name ,place_name = place.name)}}">
+			<a href="{{url_for('showPlace', catalog_name=place.category.name,^place_name=place.name)}}">
 			<li>
 				<span>{{place.name}}</span>
 			</li>

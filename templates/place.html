@@ -6,15 +6,15 @@
 	
 		<div class="col-md-3">
                 <h6 class="pull-right">
-                    <a href = "{{url_for('deleteCategory', catalog_name = category)}}">Delete Category</a>
+                    <a href = "{{url_for('deleteCategory', catalog_name=category.name)}}">Delete Category</a>
                 </h6>
             </br>
                 <h6 class="pull-right">
-                    <a href = "{{url_for('editCategory', catalog_name = category)}}">Edit Category</a>
+                    <a href = "{{url_for('editCategory', catalog_name=category.name)}}">Edit Category</a>
                 </h6>
                 <h6 class="padding-bottom-26">Items (<strong>{{count}}</strong>)</h6>
                 {% for place in places %}
-                    <a href = "{{url_for('showPlace', catalog_name = place.category.name, place_name = place.name)}}">
+                    <a href = "{{url_for('showPlace', catalog_name = place.category.name, place_name=place.name)}}">
                 
                         <h4>{{ place.name }}</h4>
                     </a>
