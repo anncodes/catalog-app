@@ -232,7 +232,7 @@ def showCategory(catalog_name):
 @app.route('/catalog/<path:catalog_name>/<path:place_name>/')
 def showPlace(catalog_name, place_name):
     # Get category item
-    place = session.query(ItemPlace).filter_by(name=place_name).one()
+    place = session.query(ItemPlace).filter_by(name=place_name).first()
     categories = session.query(Category).order_by(asc(Category.name))
     creator = getUserInfo(place.user_id)
     if 'username' not in login_session or creator.id != login_session['user_id']:
@@ -369,8 +369,50 @@ def deleteItemPlace(place_name):
         return render_template('deleteplace.html', place=placetoDelete)
 
 # JSON APIs 
+@app.route('/catalog/JSON')
+def allPlacesJSON():
+    categories = session.query(Category).all()
+    category_dict = [c.serialize for c in categories]
+    for c in range(len(category_dict)):
+        places = [i.serialize for i in session.query(ItemPlace)\
+                    .filter_by(category_id=category_dict[c]["id"]).all()]
+        if places:
+            category_dict[c]["ItemPlace"] = places
+    return jsonify(Category=category_dict)
 
+@app.route('/catalog/categories/JSON')
+def categoriesJSON():
+    categories = session.query(Category).all()
+    return jsonify(categories=[c.serialize for c in categories])
 
+@app.route('/catalog/places/JSON')
+def placesJSON():
+    places = session.query(ItemPlace).all()
+    return jsonify(places=[i.serialize for p in places])
+
+@app.route('/catalog/<path:catalog_name>/items/JSON')
+def categoryPlacesJSON(catalog_name):
+    category = session.query(Category).filter_by(name=catalog_name).first()
+    places = Session.query(ItemPlace).filter_by(category=category).all()
+    return jsonify(places=[i.serialize for p in places])
+
+@app.route('/catalog/<path:catalog_name>/<path:place>/JSON')
+def placeJSON(catalog_name, place_name):
+    category = session.query(Category).filter_by(name=catalog_name).first()
+    place = sessiom.query(ItemPlace).filter_by(name=place_name, category=category).first()
+    return jsonify(place=[place.serialize])
+
+# @app.context_process
+# def override_url_for():
+#     return dict(url_for=dated_url_for)
+
+# def dated_url_for(endpoint, **values):
+#     if endpoint == 'static':
+#         filename = values.get('filename', None)
+#         if filename:
+#             file_path = os.path.join(app.root_path, endpoint, filename)
+#             values['q'] = int(os.stat(file_path).st_mtime)
+#     return url_for(endpoint, **values)        
 
 if __name__ == '__main__':
     app.debug = True
