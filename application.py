@@ -45,7 +45,8 @@ def showLogin():
     state = ''.join(
         random.choice(string.ascii_uppercase + string.digits)
         for x in xrange(32)
-        )login_session['state'] = state
+        )
+    login_session['state'] = state
     return render_template('login.html', STATE=state)
 
 
@@ -224,8 +225,7 @@ def showCategory(catalog_name):
     print places
     count = session.query(ItemPlace).filter_by(category=category).count()
     creator = getUserInfo(category.user_id)
-    if 'username' not in login_session
-    or creator.id != login_session['user_id']:
+    if 'username' not in login_session or creator.id != login_session['user_id']:
         return render_template(
                                 'publicplace.html',
                                 category=category,
@@ -249,8 +249,7 @@ def showPlace(catalog_name, place_name):
     place = session.query(ItemPlace).filter_by(name=place_name).first()
     categories = session.query(Category).order_by(asc(Category.name))
     creator = getUserInfo(place.user_id)
-    if 'username' not in login_session
-    or creator.id != login_session['user_id']:
+    if 'username' not in login_session or creator.id != login_session['user_id']:
         return render_template('public_placedetail.html',
                                place=place,
                                category=catalog_name,

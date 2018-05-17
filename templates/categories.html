@@ -14,7 +14,8 @@
 				 {% endfor %}
 			</ul>
 		{% if 'username' in session %}
-		<a href="{{url_for('newCategory')}}">New Category</a>
+			<a href="{{url_for('newCategory')}}">New Category</a><br>
+			
 		{% endif %}
 		</div>
 {% endblock %}

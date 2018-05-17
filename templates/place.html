@@ -2,20 +2,16 @@
 
 {% block content %}
 
-	 {% include "categories.html" %}
+{% include "categories.html" %}
 	
-                
-                <h6 >Items (<strong>{{count}}</strong>)</h6>
-                {% for place in places %}
-                    <a href = "{{url_for('showPlace', catalog_name = place.category.name, place_name=place.name)}}">
-                
-                        <h4>{{ place.name }}</h4>
-                    </a>
-                
-                {% endfor %}
-                {% if 'username' in session %}
-                    <a href = "{{url_for('deleteCategory', catalog_name=category.name)}}">Delete Category</a>
-                    <a href = "{{url_for('editCategory', catalog_name=category.name)}}">Edit Category</a>
-                {% endif %}
-	
+<div class="col-md-6">
+    <h1>{{category.name}} Places ({{count}} places)</h1>
+     <span><a href = "{{url_for('deleteCategory', catalog_name=category.name)}}">Delete Category</a></span>
+     <span><a href = "{{url_for('editCategory', catalog_name=category.name)}}"> Edit Category</a></span><br /><br/>
+            {% for place in places %}
+                <a href = "{{url_for('showPlace', catalog_name = place.category.name, place_name=place.name)}}">
+                <h4 class="place">{{ place.name }}</h4></a>
+            {% endfor %}
+      </div>          
+</div>
 {% endblock %}
