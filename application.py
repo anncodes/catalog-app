@@ -1,4 +1,6 @@
-from flask import Flask, render_template, url_for, request, redirect, jsonify, flash
+from flask import Flask, render_template, url_for
+from flask import make_response, request, redirect
+from flask import jsonify, flash
 from flask import session as login_session
 from functools import wraps
 import random
@@ -8,12 +10,11 @@ from sqlalchemy.orm import sessionmaker, relationship
 from database_setup import Base, Category, User, ItemPlace
 from login_decorator import login_required
 
-#imports for oauth2client
+# imports for oauth2client
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
 import httplib2
 import json
-from flask import make_response
 import requests
 
 app = Flask(__name__)
@@ -27,6 +28,7 @@ Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
+
 def login_required(f):
     '''Check user status (logged in/out)'''
     @wraps(f)
@@ -36,13 +38,16 @@ def login_required(f):
         return f(*args, **kwargs)
     return x
 
-#Create anti-forgery state token
+
+# Create anti-forgery state token
 @app.route('/login')
 def showLogin():
-    state = ''.join(random.choice(string.ascii_uppercase + string.digits)
-    for x in xrange(32))
-    login_session['state'] = state
+    state = ''.join(
+        random.choice(string.ascii_uppercase + string.digits)
+        for x in xrange(32)
+        )login_session['state'] = state
     return render_template('login.html', STATE=state)
+
 
 # GConnect
 @app.route('/gconnect', methods=['POST'])
@@ -101,8 +106,8 @@ def gconnect():
     stored_access_token = login_session.get('access_token')
     stored_gplus_id = login_session.get('gplus_id')
     if stored_access_token is not None and gplus_id == stored_gplus_id:
-        response = make_response(json.dumps('Current user is already connected.'),
-                                 200)
+        response = make_response(
+            json.dumps('Current user is already connected.'), 200)
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -133,7 +138,7 @@ def gconnect():
     output += '!</h1>'
     output += '<img src="'
     output += login_session['picture']
-    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+    output += ' "style = "width: 300px;height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
     flash("you are now logged in as %s" % login_session['username'])
     return output
 
@@ -150,13 +155,13 @@ def createUser(login_session):
 
 
 def getUserInfo(user_id):
-    user = session.query(User).filter_by(id=user_id).first()
+    user = session.query(User).filter_by(id=user_id).one()
     return user
 
 
 def getUserID(email):
     try:
-        user = session.query(User).filter_by(email=email).first()
+        user = session.query(User).filter_by(email=email).one()
         return user.id
     except:
         return None
@@ -184,8 +189,6 @@ def gdisconnect():
         del login_session['email']
         del login_session['picture']
 
-        # response = make_response(json.dumps('Successfully disconnected.'), 200)
-        # response.headers['Content-Type'] = 'application/json'
         response = redirect(url_for('showAllCategories'))
         flash("You are now logged out.")
         return response
@@ -195,66 +198,78 @@ def gdisconnect():
             json.dumps('Failed to revoke token for given user.', 400))
         response.headers['Content-Type'] = 'application/json'
         return response
-#Flask routes
-#Show 
+
+
+# Flask routes
+# Show catalog
 @app.route('/')
 @app.route('/catalog/')
 def showAllCategories():
-    categories=session.query(Category).order_by(asc(Category.name))
-    categoryPlaces=session.query(ItemPlace).all()
+    categories = session.query(Category).order_by(asc(Category.name))
+    categoryPlaces = session.query(ItemPlace).all()
 
-    return render_template('catalog.html', categories=categories, categoryPlaces=categoryPlaces)
+    return render_template(
+                'catalog.html',
+                categories=categories,
+                categoryPlaces=categoryPlaces)
 
-#Show items in a category
+
+# Show items in a category
 @app.route('/catalog/<path:catalog_name>/places')
 def showCategory(catalog_name):
-    categories=session.query(Category).order_by(asc(Category.name))
-    category=session.query(Category).filter_by(name=catalog_name).first()
-    places=session.query(ItemPlace).filter_by(category=category).order_by(asc(ItemPlace.name)).all()
+    categories = session.query(Category).order_by(asc(Category.name))
+    category = session.query(Category).filter_by(name=catalog_name).first()
+    places = session.query(ItemPlace).filter_by(
+        category=category).order_by(asc(ItemPlace.name)).all()
     print places
-    count=session.query(ItemPlace).filter_by(category=category).count()
-    creator=getUserInfo(category.user_id)
-    if 'username' not in login_session or creator.id != login_session['user_id']:
-        return render_template('publicplace.html', 
-                                category=category, 
+    count = session.query(ItemPlace).filter_by(category=category).count()
+    creator = getUserInfo(category.user_id)
+    if 'username' not in login_session
+    or creator.id != login_session['user_id']:
+        return render_template(
+                                'publicplace.html',
+                                category=category,
                                 categories=categories,
                                 count=count,
-                                places = places)
+                                places=places)
     else:
-        user=getUserInfo(login_session['user_id'])
-        return render_template('place.html',
-                                category=category, 
+        user = getUserInfo(login_session['user_id'])
+        return render_template(
+                                'place.html',
+                                category=category,
                                 categories=categories,
                                 count=count,
-                                places = places)
+                                places=places)
 
-#Show a place with its details
+
+# Show a place with its details
 @app.route('/catalog/<path:catalog_name>/<path:place_name>/')
 def showPlace(catalog_name, place_name):
     # Get category item
     place = session.query(ItemPlace).filter_by(name=place_name).first()
     categories = session.query(Category).order_by(asc(Category.name))
     creator = getUserInfo(place.user_id)
-    if 'username' not in login_session or creator.id != login_session['user_id']:
-        return render_template('public_placedetail.html', 
+    if 'username' not in login_session
+    or creator.id != login_session['user_id']:
+        return render_template('public_placedetail.html',
                                place=place,
                                category=catalog_name,
                                categories=categories,
                                creator=creator)
     else:
-        return render_template('placedetail.html', 
+        return render_template('placedetail.html',
                                place=place,
                                category=catalog_name,
                                categories=categories,
                                creator=creator)
 
+
 # Add new category
-@app.route('/catalog/newcategory', methods=['GET','POST'])
+@app.route('/catalog/newcategory', methods=['GET', 'POST'])
 @login_required
 def newCategory():
-    
     if request.method == 'POST':
-        newCategory = Category( 
+        newCategory = Category(
             name=request.form['name'],
             user_id=login_session['user_id'])
         print newCategory
@@ -265,15 +280,14 @@ def newCategory():
     else:
         return render_template('newcategory.html')
 
-#Edit a category
+
+# Edit a category
 @app.route('/catalog/<path:catalog_name>/edit', methods=['GET', 'POST'])
 @login_required
 def editCategory(catalog_name):
-    
     # Get category to edit
     editedCategory = session.query(Category).filter_by(name=catalog_name).one()
     category = session.query(Category).filter_by(name=catalog_name).one()
-    
     user = getUserInfo(login_session['user_id'])
     # POST method
     if request.method == 'POST':
@@ -284,36 +298,41 @@ def editCategory(catalog_name):
         flash('Category successfully edited.')
         return redirect(url_for('showAllCategories'))
     else:
-        return render_template('editcategory.html',
+        return render_template(
+                                'editcategory.html',
                                 categories=editedCategory,
                                 category=category)
 
-#Delete a category
-@app.route('/catalog/<path:catalog_name>/delete', methods=['GET','POST'])
+
+# Delete a category
+@app.route('/catalog/<path:catalog_name>/delete', methods=['GET', 'POST'])
 @login_required
 def deleteCategory(catalog_name):
-    deletedCategory = session.query(Category).filter_by(name=catalog_name).one()
+    deletedCategory = session.query(Category).filter_by(
+        name=catalog_name).one()
     user = getUserInfo(login_session['user_id'])
     if request.method == 'POST':
         session.delete(deletedCategory)
         session.commit()
-        flash('Category successfully deleted.' +deletedCategory.name)
+        flash('Category successfully deleted.' + deletedCategory.name)
         return redirect(url_for('showAllCategories'))
     else:
         return render_template('deletecategory.html', category=deletedCategory)
 
-#Add an item
+
+# Add an item
 @app.route('/catalog/newplace', methods=['GET', 'POST'])
 @login_required
 def addItemPlace():
-    categories=session.query(Category).all()
-    if request.method=='POST':
-        newItemPlace=ItemPlace(
+    categories = session.query(Category).all()
+    if request.method == 'POST':
+        newItemPlace = ItemPlace(
             name=request.form['name'],
             address=request.form['address'],
             description=request.form['description'],
             photo=request.form['photo'],
-            category=session.query(Category).filter_by(name=request.form['category']).first(),
+            category=session.query(Category).filter_by(
+                name=request.form['category']).first(),
             user_id=login_session['user_id'])
         session.add(newItemPlace)
         session.commit()
@@ -322,73 +341,81 @@ def addItemPlace():
     else:
         return render_template('newitemplace.html', categories=categories)
 
+
 # Edit an item place in a category
 @app.route('/<path:place_name>/edit', methods=['GET', 'POST'])
 @login_required
 def editPlace(place_name):
-    
-    editedPlace=session.query(ItemPlace).filter_by(name=place_name).one()
-    categories=session.query(Category).all()
-    user=getUserInfo(login_session['user_id'])
-    
+    editedPlace = session.query(ItemPlace).filter_by(name=place_name).one()
+    categories = session.query(Category).all()
+    user = getUserInfo(login_session['user_id'])
     # POST method
     if request.method == 'POST':
         if request.form['name']:
-            editedPlace.name=request.form['name']
+            editedPlace.name = request.form['name']
         if request.form['address']:
-            editedPlace.address=request.form['address']
+            editedPlace.address = request.form['address']
         if request.form['description']:
-            editedPlace.description=request.form['description']
+            editedPlace.description = request.form['description']
         if request.form['photo']:
-            editedPlace.photo=request.form['photo']
+            editedPlace.photo = request.form['photo']
         if request.form['category']:
-            category=session.query(Category).filter_by(name=request.form['category']).one()
-            editedPlace.category=category
+            category = session.query(Category).filter_by(
+                name=request.form['category']).one()
+            editedPlace.category = category
         session.add(editedPlace)
         session.commit()
         flash('Item successfully edited.')
-        return redirect(url_for('showCategory', catalog_name=editedPlace.category.name))
+        return redirect(url_for(
+                                'showCategory',
+                                catalog_name=editedPlace.category.name))
     else:
-        return render_template('edititemplace.html',
+        return render_template(
+                                'edititemplace.html',
                                 place=editedPlace,
                                 categories=categories)
 
-#Delete item place
-@app.route('/<path:place_name>/delete', methods=['GET','POST'])
+
+# Delete item place
+@app.route('/<path:place_name>/delete', methods=['GET', 'POST'])
 @login_required
 def deleteItemPlace(place_name):
 
     placetoDelete = session.query(ItemPlace).filter_by(name=place_name).first()
-    user=getUserInfo(login_session['user_id'])
+    user = getUserInfo(login_session['user_id'])
     if request.method == 'POST':
         session.delete(placetoDelete)
-        session.commit()   
+        session.commit()
         flash('Item successfully deleted!')
         return redirect(url_for('showAllCategories'))
     else:
         return render_template('deleteplace.html', place=placetoDelete)
 
-# JSON APIs 
+
+# JSON APIs
 @app.route('/catalog/JSON')
 def allPlacesJSON():
     categories = session.query(Category).all()
     category_dict = [c.serialize for c in categories]
     for c in range(len(category_dict)):
-        places = [i.serialize for i in session.query(ItemPlace)\
-                    .filter_by(category_id=category_dict[c]["id"]).all()]
+        places = [i.serialize for i in session.query(ItemPlace).filter_by(
+            category_id=category_dict[c]["id"]).all()]
         if places:
             category_dict[c]["ItemPlace"] = places
     return jsonify(Category=category_dict)
+
 
 @app.route('/catalog/categories/JSON')
 def categoriesJSON():
     categories = session.query(Category).all()
     return jsonify(categories=[c.serialize for c in categories])
 
+
 @app.route('/catalog/places/JSON')
 def placesJSON():
     places = session.query(ItemPlace).all()
     return jsonify(places=[i.serialize for p in places])
+
 
 @app.route('/catalog/<path:catalog_name>/items/JSON')
 def categoryPlacesJSON(catalog_name):
@@ -396,11 +423,14 @@ def categoryPlacesJSON(catalog_name):
     places = Session.query(ItemPlace).filter_by(category=category).all()
     return jsonify(places=[i.serialize for p in places])
 
+
 @app.route('/catalog/<path:catalog_name>/<path:place>/JSON')
 def placeJSON(catalog_name, place_name):
     category = session.query(Category).filter_by(name=catalog_name).first()
-    place = sessiom.query(ItemPlace).filter_by(name=place_name, category=category).first()
+    place = sessiom.query(ItemPlace).filter_by(
+        name=place_name, category=category).first()
     return jsonify(place=[place.serialize])
+
 
 # @app.context_process
 # def override_url_for():
@@ -412,9 +442,10 @@ def placeJSON(catalog_name, place_name):
 #         if filename:
 #             file_path = os.path.join(app.root_path, endpoint, filename)
 #             values['q'] = int(os.stat(file_path).st_mtime)
-#     return url_for(endpoint, **values)        
+#     return url_for(endpoint, **values)
+
 
 if __name__ == '__main__':
     app.debug = True
     app.secret_key = "altered_secret_key"
-    app.run(host='0.0.0.0', port = 5020)
+    app.run(host='0.0.0.0', port=5020)
