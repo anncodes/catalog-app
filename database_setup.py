@@ -32,6 +32,7 @@ class Category(Base):
             'id': self.id,
             }
 
+
 class ItemPlace(Base):
     __tablename__ = 'item_place'
 
@@ -41,7 +42,8 @@ class ItemPlace(Base):
     description = Column(String(250))
     photo = Column(String(250))
     category_id = Column(Integer, ForeignKey('category.id'))
-    category = relationship(Category, backref=backref('item_place', cascade='all, delete'))
+    category = relationship(Category, backref=backref(
+        'item_place', cascade='all, delete'))
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship(User, backref="item_place")
 
