@@ -2,34 +2,35 @@
 
 {% block content %}
 
-	<div class="row">
-		<div class="col">
+			<section>
+			<div class="col-sm-6">
 			<h1>Categories</h1>
-			<ul>
-				{% for category in categories %}
-				 <a href="{{url_for('showCategory', catalog_name=category.name)}}">
-				 	<li>
-				 		<span>{{category.name}}</span>
-				 	</li>
-				 </a>
-				 {% endfor %}
-			</ul>
-		</div>
-		<div class="col-6">
-		<h1>{{categoryName}}</h1>
-			{% for place in places %}
+				<ul>
+					{% for category in categories %}
+					 <a href="{{url_for('showCategory', catalog_name=category.name)}}">
+					 	<li>
+					 		{{category.name}}
+					 	</li>
+					 </a>
+					 {% endfor %}
+				
+				</ul>
+		
+				<h1>{{categoryName}}</h1>
+					{% for place in places %}
+					<ul>
+						<a href="{{url_for('showPlace', catalog_name=place.category.name, place_name=place.name)}}">
+						<li>
+							{{place.name}}
+						</li>
+						</a>
+					</ul>
+					{% endfor %}
+			</div>	
 
-			<a href="{{url_for('showPlace', catalog_name=place.category.name,^place_name=place.name)}}">
-			<li>
-				<span>{{place.name}}</span>
-			</li>
-			</a>
-			{% endfor %}
-
-	    </div>
 {% if 'username' in session %}
                <a href="{{url_for('newCategory')}}">New Category</a>
                <a href="{{url_for('addItemPlace')}}">Add Item</a>
            {% endif %}
-	</div>
+
 {% endblock %}

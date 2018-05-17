@@ -2,30 +2,14 @@
 
 {% block content %}
 
-	<div class="row">
-
-            {% include "categories.html" %}
-
-            <div class="col-md-9 padding-top-49">
-
-                <div class="thumbnail">
-                    <img class="img-responsive" src="{{ place.picture }}" alt="{{ place.name }}">
-                    <div class="caption-full">
-                        <h6 class="pull-right padding-left-10">
-                            <a href = "{{url_for('deleteItemPlace', catalog_name = place.category.name, place_name = place.name)}}">Delete</a>
-                        </h6>
-                        <h6 class="pull-right">
-                            <a href = "{{url_for('editPlace', catalog_name = place.category.name, place_name = place.name)}}">Edit</a>
-                        </h6>
-                        <h4>{{place.name }}</h4>
-                        <p>{{place.description }}</p>
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-	</div>
-	
+<div class="placedetail">
+	<h4>{{place.name }}</h4>
+    <img class="img-fluid" src="{{ place.photo }}" alt="{{ place.name }}">
+    <p>{{place.description }}</p>
+        {% if 'username' in session %}
+	        <span><a href = "{{url_for('deleteItemPlace', catalog_name = place.category.name, place_name = place.name)}}">Delete</a>
+	        <a href = "{{url_for('editPlace', catalog_name = place.category.name, place_name = place.name)}}">Edit</a></span>
+	    {% endif %}
+                       
+             
 {% endblock %}

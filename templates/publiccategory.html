@@ -9,7 +9,7 @@
 
             {% include "categories.html" %}
 
-            <div class="col-md-6">
+            <div class="col">
             <h1>Latest Places</h1>
             <ul>
                     {% for categoryPlace in categoryPlaces %}
@@ -21,11 +21,10 @@
                         </a>
                     {% endfor %}
                 </ul>
-            {% if 'username' in session %}
+            </div>
                <a href="{{url_for('newCategory')}}">New Category</a>
                <a href="{{url_for('addItemPlace')}}">Add Item</a>
-           {% endif %}
-        </div>
-<!-- /.section -->
+           </div>
 
+            </div>
 {% endblock %}
